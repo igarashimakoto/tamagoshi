@@ -9,6 +9,8 @@ export function useGoshiDatabase() {
         goshiHealth: number, goshiSleep: number, goshiHappiness: number, goshiStatus: string
     }) {
 
+        console.log( name, goshiType, goshiHealth, goshiSleep, goshiHappiness, goshiStatus );
+
         const query = await database.prepareAsync(`INSERT INTO saves (name, goshiType, goshiHealth, goshiSleep, 
                                                    goshiHappiness, goshiStatus) VALUES ($name, $goshiType, $goshiHealth, $goshiSleep, 
                                                    $goshiHappiness, $goshiStatus);`);
@@ -38,6 +40,47 @@ export function useGoshiDatabase() {
         }
     }
 
+    async function updateSave({goshiid, health, sleep, happiness, status }: {
+    goshiid: number, health: number, sleep: number, happiness: number, status: string}) { 
+
+        console.log("entrou aqui",  goshiid, health, sleep, happiness, status );
+
+        const query = await database.prepareAsync(`UPDATE saves SET goshiHealth=$health, goshiSleep=$sleep, 
+            goshiHappiness=$happiness, goshiStatus=$status WHERE id=$goshiid`);
+
+            try {
+
+                await query.executeAsync({$health :health, $sleep: sleep, $happiness: happiness, $status: status, $goshiid: goshiid});
+
+            } catch (err) {
+    
+                console.log('update deu erro');
+                console.log(err);
+            } finally {
+                
+                console.log('update deu certo')
+                await query.finalizeAsync();
+            }
+    }
+
+    async function deleteSave({ id }: { id: number }) {
+
+        const query = await database.prepareAsync('DELETE FROM saves WHERE id=?');
+
+        try {
+
+            await query.executeAsync([id]);
+
+        } catch (err) {
+
+            console.log(err);
+        } finally {
+
+            await query.finalizeAsync();
+        }
+    }
+
+    
     async function createSavesExamples() {
 
         const result: any[] = await database.getAllAsync(`SELECT COUNT(*) as count FROM saves;`);
@@ -61,7 +104,5 @@ export function useGoshiDatabase() {
     }
 
 
-
-
-return { createSave, getSaves, createSavesExamples }
+return { createSave, getSaves, createSavesExamples, updateSave, deleteSave }
 }
