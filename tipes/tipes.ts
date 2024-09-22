@@ -7,3 +7,5 @@ export type Save = {
     goshiHappiness: number;
     goshiStatus: string;
 }
+
+export type Choice = 'rock' | 'paper' | 'scissors'| '';

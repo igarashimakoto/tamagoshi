@@ -110,8 +110,26 @@ const Game = () => {
     const handleGoMiniGame = async () => {
         try {
             await updateSave({ goshiid, health, sleep, happiness, status });
+            // await updateSave({ goshiid, health, sleep, happiness, status });
+            // router.push({
+            //     pathname: '/stepsMiniGame',
+            //     params: {
+            //         id: goshiid,
+            //         happiness: happiness,
+            //         goshiType: goshiType
+            //     }
+            // });
+
+            // router.push({
+            //     pathname: './JKPMiniGame',
+            //     params: {
+            //         id: goshiid,
+            //         happiness: happiness,
+            //         goshiType: goshiType
+            //     }
+            // });
             router.push({
-                pathname: '/stepsMiniGame',
+                pathname: './miniGamesNav',
                 params: {
                     id: goshiid,
                     happiness: happiness,
@@ -160,7 +178,7 @@ const Game = () => {
                             <Text style={styles.stats_text}>Health: {health}</Text>
                         </View>
                         <View style={styles.container_button}>
-                            <PixelButton title="Alimentar" onPress={() => updateStatusValue(setHealth)} />
+                            <PixelButton title="Feed" onPress={() => updateStatusValue(setHealth)} />
                         </View>
                     </View>
 
@@ -169,7 +187,7 @@ const Game = () => {
                             <Text style={styles.stats_text}>Sleep: {sleep}</Text>
                         </View>
                         <View style={styles.container_button}>
-                            <PixelButton title="Dormir" onPress={() => updateStatusValue(setSleep)} />
+                            <PixelButton title="Sleep" onPress={() => updateStatusValue(setSleep)} />
                         </View>
                     </View>
 
@@ -178,13 +196,13 @@ const Game = () => {
                             <Text style={styles.stats_text}>Happy: {happiness}</Text>
                         </View>
                         <View style={styles.container_button}>
-                            <PixelButton title="Brincar" onPress={handleGoMiniGame} />
+                            <PixelButton title="Play" onPress={handleGoMiniGame} />
                         </View>
 
                     </View>
                 </View>
                 <View style={styles.backButton}>
-                        <PixelButton title="Voltar" onPress={handleBackButtonPress} />
+                        <PixelButton title="Back" onPress={handleBackButtonPress} />
                 </View>
             </View>
         </View>

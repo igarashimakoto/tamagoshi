@@ -202,7 +202,7 @@ const Saves = () => {
                         resizeMode="contain"
                     />
                 </View>
-                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.name}> Name: {item.name}</Text>
                 <Text style={styles.list_text}>Health: {item.goshiHealth}</Text>
                 <Text style={styles.list_text}>Sleep: {item.goshiSleep}</Text>
                 <Text style={styles.list_text}>Happiness: {item.goshiHappiness}</Text>
@@ -212,7 +212,7 @@ const Saves = () => {
                 style={styles.deleteButton}
                 onPress={() => handleDelete(item.id)}
             >
-                <Text style={styles.deleteButtonText}>Excluir</Text>
+                <Text style={styles.deleteButtonText}>Delete</Text>
             </Pressable>
         </View>
     );
@@ -231,7 +231,7 @@ const Saves = () => {
                         pressed ? styles.buttonPressed : null,
                     ]}
                     onPress={() => { setDialogOpen(true) }}>
-                    <Text style={styles.buttonText}>Novo</Text>
+                    <Text style={styles.buttonText}>New</Text>
                 </Pressable>
                 <NewSaveForm
                     visible={dialogOpen}

@@ -105,22 +105,28 @@ const stepsMiniGame = () => {
 
     const handleEndGame = async () => {
 
-        const newHappiness = Math.min(currentHappiness + 30, 100);
+        try {
+        
+            const newHappiness = Math.min(currentHappiness + 30, 100);
 
-        console.log('valores do minigame', goshiid,newHappiness);
-
-        await updateHappiness({ goshiid, happiness: newHappiness });
-
-        if (subscription) {
-            subscription.remove();
-            setSubscription(null);
-        }
-
-        setMiniGameStarted(false); 
-        handleGoBack();
+            console.log('valores do minigame', goshiid,newHappiness);
+    
+            await updateHappiness({ goshiid, happiness: newHappiness });
+    
+            if (subscription) {
+                subscription.remove();
+                setSubscription(null);
+            }
+    
+            setMiniGameStarted(false); 
+            handleGoBack();
+        }catch(err){
+            console.log(err);
+            alert("erro ao encerrar o jogo");
+         }
     }
 
-    const handleGoBack = async () => {
+   const handleGoBack = async () => {
         try {
 
             const save: Save | undefined = await getSingleSave({ goshiid });
@@ -154,8 +160,8 @@ const stepsMiniGame = () => {
             <View style={styles.menu}>
 
                 <Text style={styles.counterText}>Passos: {stepsCount}/{stepsGoal}</Text>
-                <PixelButton title="Voltar" onPress={handleGoBack} />
-                {!miniGameStarted && <PixelButton title="Iniciar Jogo" onPress={startMiniGame}/>}
+                {!miniGameStarted && <PixelButton title="Start Game" onPress={startMiniGame}/>}
+                <PixelButton title="Back" onPress={handleGoBack} />
             </View>
         </ImageBackground>
     );
