@@ -6,7 +6,7 @@ import goshi2 from '../assets/images/images_goshi/goshi_2.gif';
 import goshi3 from '../assets/images/images_goshi/goshi_3.gif';
 import PixelButton from '../components/tamagoshi/pixelButton';
 import { useGoshiDatabase } from './goshiService';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 
 const Game = () => {
@@ -16,123 +16,81 @@ const Game = () => {
     const navigation = useNavigation();
 
     const goshiid = Number(id);
-
-    //QUANTOS PONTOS DIMINUIR DE CADA STATUS A CADA TICK
     const decreaseAmount = 5;
-
-    //DE QUANTO EM QUANTO TEMPO DIMINUIR OS STATS (MILISEGUNDOS)
-    const decreaseTimer = 3000;
+    const decreaseTimer = 2000;
 
     const [health, setHealth] = useState(Number(goshiHealth));
     const [sleep, setSleep] = useState(Number(goshiSleep));
     const [happiness, setHappiness] = useState(Number(goshiHappiness));
     const [status, setStatus] = useState(Array.isArray(goshiStatus) ? goshiStatus[0] : goshiStatus);
-    const [pauseTimer, setPauseTimer] = useState(false);
+    const [intervalId, setIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
+    const [isGameActive, setIsGameActive] = useState(false);
 
     useEffect(() => {
+        if (isGameActive) {
+            updateGoshiStatus();
+        }
+    }, [health, sleep, happiness, isGameActive]);
 
+    const updateGoshiStatus = () => {
+        const sum = health + sleep + happiness;
+        console.log("testou:", sum)
+        if (sum === 0) {
+            setStatus("Dead");
+            handleGoshiDeath();
+        } else if (sum <= 50) {
+            setStatus("Critical");
+        } else if (sum <= 100) {
+            setStatus("Suffering");
+        } else if (sum <= 150) {
+            setStatus("Sad");
+        } else if (sum <= 200) {
+            setStatus("Ok");
+        } else if (sum <= 250) {
+            setStatus("Good");
+        } else {
+            setStatus("Very Good");
+        }
+    };
 
-        const interval = setInterval(() => {
-
-            if (health > 0) {
-                setHealth(prev => Math.max(prev - decreaseAmount, 0));
-                if (health < 0) {
-                    setHealth(0);
-                }
-            }
-            if (sleep > 0) {
-                setSleep(prev => Math.max(prev - decreaseAmount, 0));
-                if (sleep < 0) {
-                    setSleep(0);
-                }
-            }
-            if (happiness > 0) {
-                setHappiness(prev => Math.max(prev - decreaseAmount, 0));
-                if (happiness < 0) {
-                    setHappiness(0);
-                }
-            }
+    const startDecreasingStats = () => {
+        if (intervalId) return;
+        const id = setInterval(() => {
+            setHealth(prev => Math.max(prev - decreaseAmount, 0));
+            setSleep(prev => Math.max(prev - decreaseAmount, 0));
+            setHappiness(prev => Math.max(prev - decreaseAmount, 0));
         }, decreaseTimer);
+        setIntervalId(id);
+    };
 
-        return () => clearInterval(interval);
-
-    }, []);
-
-    useEffect(() => {
-        updateGoshiStatus();
-    }, [health, sleep, happiness]);
-
-    const updateStatusValue = (setter: React.Dispatch<React.SetStateAction<number>>, currentValue: number) => {
-        setter(prev => {
-            const newValue = prev + 20 > 100 ? 100 : prev + 20;
-            return newValue;
-        });
+    const stopDecreasingStats = () => {
+        if (intervalId) {
+            clearInterval(intervalId);
+            setIntervalId(null);
+        }
     };
 
     useFocusEffect(
         React.useCallback(() => {
-            const onBeforeRemove = async () => {
+            setIsGameActive(true);
+            startDecreasingStats();
 
-                await updateSave({ goshiid, health, sleep, happiness, status });
+            const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+                e.preventDefault();
+                stopDecreasingStats();
+                setIsGameActive(false);
 
-                router.push({ pathname: '/', params: {} });
-            };
-
-            const unsubscribe = navigation.addListener('beforeRemove', onBeforeRemove);
+            });
 
             return () => {
+                stopDecreasingStats();
+                setIsGameActive(false);
                 unsubscribe();
-                setPauseTimer(false);
             };
-        }, [navigation, health, sleep, happiness, status, updateSave, goshiid])
+        }, [navigation])
     );
 
-    const updateGoshiStatus = () => {
-        const sum = health + sleep + happiness;
-        switch (true) {
-            case sum === 0:
-                setStatus("Dead");
-                handleGoshiDeath();
-                break;
-            case sum <= 50:
-                setStatus("Critical");
-                break;
-            case sum <= 100:
-                setStatus("Suffering");
-                break;
-            case sum <= 150:
-                setStatus("Sad");
-                break;
-            case sum <= 200:
-                setStatus("Ok");
-                break;
-            case sum <= 250:
-                setStatus("Good");
-                break;
-            default:
-                setStatus("Very Good");
-        }
-    };
-
-    // const updateGoshiStatus = () => {
-    //     const sum = health + sleep + happiness;
-    //     if (sum === 0) {
-
-    //         console.log('passou pela morte');
-
-    //         setStatus("Dead");
-    //         handleGoshiDeath();
-    //     }
-    //     else if (sum <= 50) setStatus("Critical");
-    //     else if (sum <= 100) setStatus("Suffering");
-    //     else if (sum <= 150) setStatus("Sad");
-    //     else if (sum <= 200) setStatus("Ok");
-    //     else if (sum <= 250) setStatus("Good");
-    //     else setStatus("Very Good");
-    // };
-
     const handleGoshiDeath = async () => {
-
         Alert.alert(
             "Seu tamagoshi morreu!",
             `${name} não sobreviveu `,
@@ -140,11 +98,8 @@ const Game = () => {
                 {
                     text: "OK",
                     onPress: async () => {
-
-                        await updateSave({ goshiid, health, sleep, happiness, status: 'Morto' });
-
+                        await updateSave({ goshiid, health, sleep, happiness, status: 'Dead' });
                         router.push({ pathname: '/', params: {} });
-
                     }
                 }
             ],
@@ -152,7 +107,37 @@ const Game = () => {
         );
     };
 
-    const goshiTypeNumber = Number(goshiType);
+    const handleGoMiniGame = async () => {
+        try {
+            await updateSave({ goshiid, health, sleep, happiness, status });
+            router.push({
+                pathname: '/stepsMiniGame',
+                params: {
+                    id: goshiid,
+                    happiness: happiness,
+                    goshiType: goshiType
+                }
+            });
+        } catch (err) {
+            console.log(err);
+        }
+    };
+
+    const updateStatusValue = (setter: React.Dispatch<React.SetStateAction<number>>) => {
+        setter(prev => Math.min(prev + 20, 100));
+    };
+
+    const handleBackButtonPress = async () => {
+
+        try {
+    
+            await updateSave({ goshiid, health, sleep, happiness, status });
+            router.push('/');
+        } catch (err) {
+            console.log(err);
+        }
+    
+    };
 
     return (
         <View style={styles.container}>
@@ -162,43 +147,50 @@ const Game = () => {
 
             <View style={styles.gifContainer}>
                 <Image
-                    source={goshiTypeNumber === 1 ? goshi1 : goshiTypeNumber === 2 ? goshi2 : goshi3}
+                    source={Number(goshiType) === 1 ? goshi1 : Number(goshiType) === 2 ? goshi2 : goshi3}
                     style={styles.gif}
                     resizeMode="contain"
                 />
             </View>
 
-            <View style={styles.stats_window}>
-                <View style={styles.stats}>
-                    <View style={styles.container_stats}>
-                        <Text style={styles.stats_text}>Health: {health}</Text>
+            <View style={styles.statsContainer}>
+                <View style={styles.statsWindow}>
+                    <View style={styles.stats}>
+                        <View style={styles.container_stats}>
+                            <Text style={styles.stats_text}>Health: {health}</Text>
+                        </View>
+                        <View style={styles.container_button}>
+                            <PixelButton title="Alimentar" onPress={() => updateStatusValue(setHealth)} />
+                        </View>
                     </View>
-                    <View style={styles.container_button}>
-                        <PixelButton title="Alimentar" onPress={() => updateStatusValue(setHealth, health)} />
+
+                    <View style={styles.stats}>
+                        <View style={styles.container_stats}>
+                            <Text style={styles.stats_text}>Sleep: {sleep}</Text>
+                        </View>
+                        <View style={styles.container_button}>
+                            <PixelButton title="Dormir" onPress={() => updateStatusValue(setSleep)} />
+                        </View>
+                    </View>
+
+                    <View style={styles.stats}>
+                        <View style={styles.container_stats}>
+                            <Text style={styles.stats_text}>Happy: {happiness}</Text>
+                        </View>
+                        <View style={styles.container_button}>
+                            <PixelButton title="Brincar" onPress={handleGoMiniGame} />
+                        </View>
+
                     </View>
                 </View>
-
-                <View style={styles.stats}>
-                    <View style={styles.container_stats}>
-                        <Text style={styles.stats_text}>Sleep: {sleep}</Text>
-                    </View>
-                    <View style={styles.container_button}>
-                        <PixelButton title="Dormir" onPress={() => updateStatusValue(setSleep, sleep)} />
-                    </View>
-                </View>
-
-                <View style={styles.stats}>
-                    <View style={styles.container_stats}>
-                        <Text style={styles.stats_text}>Happy: {happiness}</Text>
-                    </View>
-                    <View style={styles.container_button}>
-                        <PixelButton title="Brincar" onPress={() => updateStatusValue(setHappiness, happiness)} />
-                    </View>
+                <View style={styles.backButton}>
+                        <PixelButton title="Voltar" onPress={handleBackButtonPress} />
                 </View>
             </View>
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {
@@ -225,8 +217,8 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: 'PressStart2P_400Regular',
     },
-    stats_window: {
-        alignItems: 'flex-start',
+    statsContainer: {
+
         width: '100%',
         height: 300,
         justifyContent: 'center',
@@ -236,6 +228,17 @@ const styles = StyleSheet.create({
         padding: 8,
         borderRadius: 4,
     },
+
+    statsWindow: {
+        alignItems: 'flex-start',
+
+    },
+    backButton :{
+
+        alignItems:'center',
+        justifyContent: 'center',
+    },
+
     gifContainer: {
         width: '100%',
         height: 410,

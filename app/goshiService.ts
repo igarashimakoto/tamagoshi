@@ -1,4 +1,5 @@
 import { useSQLiteContext } from "expo-sqlite";
+import {Save} from "@/tipes/tipes";
 
 export function useGoshiDatabase() {
 
@@ -40,6 +41,26 @@ export function useGoshiDatabase() {
         }
     }
 
+    async function getSingleSave({ goshiid }: { goshiid: number }): Promise<Save | undefined> {
+        const query = `SELECT * FROM saves WHERE id = $id;`;
+    
+        try {
+
+            const result: Save[] = await database.getAllAsync<Save>(query, { $id: goshiid });
+    
+            if (result.length > 0) {
+
+                return result[0];
+            } else {
+                console.log('Save não encontrado.');
+                return undefined;
+            }
+        } catch (err) {
+            console.log('Erro ao buscar o save:', err);
+            return undefined;
+        } 
+    }
+
     async function updateSave({goshiid, health, sleep, happiness, status }: {
     goshiid: number, health: number, sleep: number, happiness: number, status: string}) { 
 
@@ -62,6 +83,28 @@ export function useGoshiDatabase() {
                 await query.finalizeAsync();
             }
     }
+
+    async function updateHappiness({goshiid, happiness }: {
+        goshiid: number, happiness: number}) { 
+    
+            console.log("entrou aqui de happiness",  goshiid,happiness );
+    
+            const query = await database.prepareAsync(`UPDATE saves SET goshiHappiness=$happiness WHERE id=$goshiid`);
+    
+                try {
+    
+                    await query.executeAsync({$happiness: happiness, $goshiid: goshiid});
+    
+                } catch (err) {
+        
+                    console.log('update deu erro');
+                    console.log(err);
+                } finally {
+                    
+                    console.log('update deu certo')
+                    await query.finalizeAsync();
+                }
+        }    
 
     async function deleteSave({ id }: { id: number }) {
 
@@ -104,5 +147,5 @@ export function useGoshiDatabase() {
     }
 
 
-return { createSave, getSaves, createSavesExamples, updateSave, deleteSave }
+return { createSave, getSaves, getSingleSave, createSavesExamples, updateHappiness, updateSave, deleteSave }
 }

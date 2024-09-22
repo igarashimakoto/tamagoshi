@@ -5,12 +5,14 @@ import goshi1 from '../assets/images/images_goshi/goshi_1.gif';
 import goshi2 from '../assets/images/images_goshi/goshi_2.gif';
 import goshi3 from '../assets/images/images_goshi/goshi_3.gif';
 import goshiDead from '../assets/images/images_goshi/goshi_dead.png';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import NewSaveForm from '@/components/tamagoshi/newSave';
+import { useNavigation } from '@react-navigation/native';
 
 const Saves = () => {
 
     const router = useRouter();
+    const navigation = useNavigation();
 
     useEffect(() => {
         async function fetchData() {
@@ -24,6 +26,16 @@ const Saves = () => {
         //createSavesExamples();
         fetchData();
     }, []);
+    
+    useFocusEffect(
+        React.useCallback(() => {
+ 
+            const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+                e.preventDefault();
+            });
+
+        }, [navigation])
+    );
 
     const { getSaves, createSavesExamples, deleteSave } = useGoshiDatabase();
     const [saves, setSaves] = useState<Save[]>([]);
@@ -159,7 +171,7 @@ const Saves = () => {
             <TouchableOpacity style={styles.card_info}
                 onPress={() => {
 
-                    if (item.goshiStatus === 'Morto') {
+                    if (item.goshiStatus === 'Dead') {
 
                         Alert.alert(
                             'Goshi Morto',
@@ -185,7 +197,7 @@ const Saves = () => {
             >
                 <View style={styles.gifContainer}>
                     <Image
-                        source={item.goshiStatus === 'Morto' && goshiDead || item.goshiType === 1 && goshi1 || item.goshiType === 2 && goshi2 || item.goshiType === 3 && goshi3}
+                        source={item.goshiStatus === 'Dead' && goshiDead || item.goshiType === 1 && goshi1 || item.goshiType === 2 && goshi2 || item.goshiType === 3 && goshi3}
                         style={styles.gif}
                         resizeMode="contain"
                     />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, Text, View, StyleSheet, TextInput, Image } from "react-native";
+import { Modal, Text, View, StyleSheet, TextInput, Image, Alert } from "react-native";
 import { Picker } from '@react-native-picker/picker';
 import { useGoshiDatabase } from "@/app/goshiService";
 import PixelButton from '@/components/tamagoshi/pixelButton';
@@ -33,11 +33,20 @@ const NewSaveForm = ({ visible, onClose }: newSaveFormProps) => {
 
   const handleNewSave = async () => {
 
-    console.log(name, goshiType)
-    await createSave({ name, goshiType, goshiHealth: 100, goshiSleep: 100, goshiHappiness: 100, goshiStatus: "Very Good" });
-    setName('');
-    setGoshiType(1);
-    onClose();
+    if (!name) {
+      Alert.alert(
+        'Nome Faltando',
+        'Por favor coloque um nome.',
+        [{ text: 'OK', style: 'cancel' }]
+    );
+    } else {
+
+      console.log(name, goshiType)
+      await createSave({ name, goshiType, goshiHealth: 100, goshiSleep: 100, goshiHappiness: 100, goshiStatus: "Very Good" });
+      setName('');
+      setGoshiType(1);
+      onClose();
+    }
   };
 
   return (
